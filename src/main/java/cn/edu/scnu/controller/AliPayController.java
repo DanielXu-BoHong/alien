@@ -24,12 +24,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-// vvnsue7040@sandbox.com
-// 111111
 @Controller
 @RequestMapping("/alipay")
 public class AliPayController {
@@ -53,6 +53,36 @@ public class AliPayController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @PostMapping("/api/buy")
+    @ResponseBody
+    public Map<String, Object> buy(@RequestParam Integer goodsId, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        TbUser user = (TbUser) session.getAttribute("user");
+
+        if (user == null) {
+            result.put("success", false);
+            result.put("message", "请先登录");
+            return result;
+        }
+
+        Orders order = new Orders();
+        order.setGoodsId(goodsId);
+        order.setUserId(user.getUserId());
+        order.setCreateTime(new Date());
+        order.setState("待支付");
+        order.setOrderId(UUID.randomUUID().toString().replaceAll("-", ""));
+
+        order.setTotal(BigDecimal.valueOf(9.9)); // 示例价格，你应该从商品表中获取
+
+        ordersMapper.insert(order);
+
+        result.put("success", true);
+        result.put("orderId", order.getOrderId());
+        result.put("totalAmount", order.getTotal());
+        result.put("subject", "商品购买 - 编号" + goodsId);
+        return result;
+    }
 
     @GetMapping("/pay")
     @ResponseBody
@@ -124,6 +154,5 @@ public class AliPayController {
         }
         return "success";
     }
-
 
 }
