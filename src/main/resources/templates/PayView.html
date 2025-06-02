@@ -39,7 +39,7 @@
         <a th:href="@{/search}">搜索</a>
         <a th:href="@{/print1}">报表</a>
         <a th:href="@{/print2}">统计</a>
-        <a th:href="@{/PayView}">支付</a>
+        <a th:href="@{/PayView}">商城</a>
 
     </div>
     <div class="right-links">
@@ -59,17 +59,10 @@
     </div>
 </div>
 
-
-
 <div class="nav-container">
     <a href="/PayView" class="nav-button">商品</a>
     <a href="/OrdersView" class="nav-button">订单</a>
 </div>
-
-
-
-
-
 
 <div id="app" style="padding: 10px">
     <el-table stripe :data="tableData">
@@ -120,31 +113,13 @@
                     },
                     method: 'POST'
                 }).then(res => res.json()).then(res => {
-                    if (res) {
-                        if (goodsId === 1 || goodsId === 2) {
-                            fetch('/checkMembership', {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                }
-                            }).then(response => response.json()).then(data => {
-                                if (data.userStatus === 0) {
-                                    this.$message.error("请先登录");
-                                } else if (data.userStatus === 2 && goodsId === 1) {
-                                    this.$message.info("你已经是会员VIP了");
-                                } else {
-                                    this.$message.success("下单成功");
-                                    this.load();
-                                 }
-                            }).catch(err => {
-                                this.$message.error("检查用户状态失败");
-                            });
-                        } else {
-                            this.$message.success("下单成功");
-                            this.load();
-                        }
+                    if (res.success) {
+                        // 跳转到支付页面（把 traceNo/totalAmount/subject 从后端返回）
+                        window.location.href = "/alipay/pay?traceNo=" + res.orderId +
+                            "&totalAmount=" + res.totalAmount +
+                            "&subject=" + res.subject;
                     } else {
-                        this.$message.error("下单失败");
+                        this.$message.error(res.message || "下单失败");
                     }
                 }).catch(err => {
                     this.$message.error("购买请求失败");
